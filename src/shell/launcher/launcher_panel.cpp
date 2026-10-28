@@ -224,11 +224,19 @@ namespace {
       addChild(std::move(row));
 
       m_row->addChild(
+          ui::box({
+              .out = &m_badgeHost,
+              .fill = clearColorSpec(),
+              .visible = false,
+              .participatesInLayout = false,
+          })
+      );
+      m_badgeHost->addChild(
           ui::label({
               .out = &m_badgeLabel,
-              .fontSize = iconSize,
               .color = colorSpecFromRole(ColorRole::OnSurface),
-              .visible = false,
+              .baselineMode = LabelBaselineMode::InkCentered,
+              .participatesInLayout = false,
           })
       );
 
@@ -327,8 +335,8 @@ namespace {
       setSize(width, height);
       m_row->setFrameSize(width, height);
 
-      m_badgeLabel->setVisible(false);
-      m_badgeLabel->setParticipatesInLayout(false);
+      m_badgeHost->setVisible(m_badgeVisible);
+      m_badgeHost->setParticipatesInLayout(m_badgeVisible);
       m_image->setVisible(false);
       m_image->setParticipatesInLayout(false);
       m_glyph->setVisible(false);
@@ -337,10 +345,17 @@ namespace {
       const bool showAppIcon = m_style.showIcons && !m_badgeVisible;
       const bool showLeadingVisual = m_badgeVisible || showAppIcon;
       if (m_badgeVisible) {
+        const float paddingV = (m_style.compact ? Style::spaceXs * 0.5F : Style::spaceXs) * m_style.scale;
+        const float badgeSize = std::min(iconSize, std::max(0.0F, height - paddingV * 2.0F));
+        m_badgeHost->setFrameSize(iconSize, badgeSize);
         m_badgeLabel->setText(singleLinePreview(result.badge));
-        m_badgeLabel->setSize(iconSize, iconSize);
-        m_badgeLabel->setVisible(true);
-        m_badgeLabel->setParticipatesInLayout(true);
+        m_badgeLabel->setFontSize(badgeSize * 0.8F);
+        m_badgeLabel->measure(renderer);
+        const float badgeExtent = std::max(m_badgeLabel->width(), m_badgeLabel->height());
+        m_badgeLabel->setScale(badgeExtent > badgeSize ? badgeSize / badgeExtent : 1.0F);
+        m_badgeLabel->setPosition(
+            (iconSize - m_badgeLabel->width()) * 0.5F, (badgeSize - m_badgeLabel->height()) * 0.5F
+        );
         m_image->clear(renderer);
       } else if (showAppIcon) {
         m_image->setParticipatesInLayout(true);
@@ -455,6 +470,7 @@ namespace {
     bool m_selected = false;
     bool m_hovered = false;
     Flex* m_row = nullptr;
+    Box* m_badgeHost = nullptr;
     Label* m_badgeLabel = nullptr;
     Image* m_image = nullptr;
     Glyph* m_glyph = nullptr;
