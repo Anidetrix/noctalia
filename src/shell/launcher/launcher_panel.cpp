@@ -59,6 +59,11 @@ namespace {
   constexpr std::string_view kProviderOverviewProviderId = "__launcher_provider_overview__";
   constexpr std::string_view kProviderOverviewResultPrefix = "provider:";
 
+  void applyLauncherToolbarStyle(Flex& toolbar, float scale, float opacity) {
+    toolbar.setCardStyle(scale, opacity);
+    toolbar.setPadding(std::round(Style::cardPadding * scale));
+  }
+
   double usageBoostForScore(double score, int usageCount, bool typedQuery) {
     if (usageCount <= 0) {
       return 0.0;
@@ -1848,25 +1853,26 @@ void LauncherPanel::create() {
     auto toolbar = ui::row({
         .out = &m_launcherToolbar,
         .align = FlexAlign::Center,
-        .gap = Style::spaceSm * scale,
-        .padding = Style::spaceSm * scale,
+        .gap = std::round(Style::spaceSm * scale),
         .fillWidth = true,
-        .configure = [scale, opacity = panelCardOpacity()](Flex& flex) { flex.setCardStyle(scale, opacity); },
+        .configure = [scale, opacity = panelCardOpacity()](Flex& flex) {
+          applyLauncherToolbarStyle(flex, scale, opacity);
+        },
     });
-    const float toolbarSideWidth = kLauncherAvatarSize * scale;
+    const float toolbarSideWidth = std::round(kLauncherAvatarSize * scale);
     auto profile = ui::row({
         .align = FlexAlign::Center,
         .justify = FlexJustify::Center,
         .width = toolbarSideWidth,
-        .height = kLauncherAvatarSize * scale,
+        .height = toolbarSideWidth,
     });
     profile->addChild(
         ui::image({
             .out = &m_launcherAvatar,
             .fit = ImageFit::Cover,
-            .radius = kLauncherAvatarSize * 0.5F * scale,
-            .width = kLauncherAvatarSize * scale,
-            .height = kLauncherAvatarSize * scale,
+            .radius = toolbarSideWidth * 0.5F,
+            .width = toolbarSideWidth,
+            .height = toolbarSideWidth,
             .visible = false,
             .participatesInLayout = false,
         })
@@ -1894,8 +1900,8 @@ void LauncherPanel::create() {
         ui::inputArea({
             .acceptedButtons = 0,
             .tooltip = sessionDisplayName() + "\n" + distroLabel(),
-            .width = kLauncherAvatarSize * scale,
-            .height = kLauncherAvatarSize * scale,
+            .width = toolbarSideWidth,
+            .height = toolbarSideWidth,
             .zIndex = 1,
             .participatesInLayout = false,
         })
@@ -1925,8 +1931,8 @@ void LauncherPanel::create() {
               .width = toolbarSideWidth,
               .onClick = [this] { showSessionActions(); },
               .configure =
-                  [scale](Button& button) {
-                    button.setControlHeight(kLauncherAvatarSize * scale);
+                  [toolbarSideWidth](Button& button) {
+                    button.setControlHeight(toolbarSideWidth);
                     button.inputArea()->setTabFocusKey("launcher.power");
                   },
           })
@@ -2205,7 +2211,7 @@ void LauncherPanel::onPanelCardOpacityChanged(float opacity) {
     m_launcherNavigation->setSurfaceOpacity(opacity);
   }
   if (m_launcherToolbar != nullptr) {
-    m_launcherToolbar->setCardStyle(contentScale(), opacity);
+    applyLauncherToolbarStyle(*m_launcherToolbar, contentScale(), opacity);
   }
   if (m_launcherSections != nullptr) {
     m_launcherSections->notifyDataChanged();
