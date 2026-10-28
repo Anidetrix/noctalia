@@ -1903,16 +1903,16 @@ void LauncherPanel::create() {
     toolbar->addChild(std::move(profile));
     input->setFlexGrow(1.0F);
     toolbar->addChild(std::move(input));
-    auto shortcuts = ui::row({
-        .align = FlexAlign::Center,
-        .justify = FlexJustify::End,
-        .gap = Style::spaceSm * scale,
-        .width = toolbarSideWidth,
-    });
     const bool showSessionButton = m_config == nullptr || m_config->config().shell.launcher.showSessionButton;
     const bool searchOnTop = m_config != nullptr
         && m_config->config().shell.launcher.searchPosition == ShellConfig::LauncherSearchPosition::Top;
     if (showSessionButton) {
+      auto shortcuts = ui::row({
+          .align = FlexAlign::Center,
+          .justify = FlexJustify::End,
+          .gap = Style::spaceSm * scale,
+          .width = toolbarSideWidth,
+      });
       shortcuts->addChild(
           ui::button({
               .out = &m_launcherPowerButton,
@@ -1931,8 +1931,8 @@ void LauncherPanel::create() {
                   },
           })
       );
+      toolbar->addChild(std::move(shortcuts));
     }
-    toolbar->addChild(std::move(shortcuts));
     if (searchOnTop) {
       container->addChild(std::move(toolbar));
       container->addChild(std::move(body));
