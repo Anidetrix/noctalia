@@ -530,6 +530,7 @@ namespace noctalia::config::schema {
       static const Schema<ControlCenterConfig::CalendarTabConfig> s = {
           field(&ControlCenterConfig::CalendarTabConfig::showEventsCard, "show_events_card"),
           field(&ControlCenterConfig::CalendarTabConfig::showWeekNumbers, "show_week_numbers"),
+          field(&ControlCenterConfig::CalendarTabConfig::showEventsLocation, "show_events_location"),
           field(&ControlCenterConfig::CalendarTabConfig::hidePastEvents, "hide_past_events"),
           field(
               &ControlCenterConfig::CalendarTabConfig::pastEventsThresholdMinutes, "past_events_threshold_minutes",

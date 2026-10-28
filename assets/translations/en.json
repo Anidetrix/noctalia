@@ -681,6 +681,7 @@
         "show-caps-lock": "Caps Lock Warning",
         "show-device": "Show Device",
         "show-events": "Show Events",
+        "show-events-location": "Show Event Location",
         "show-forecast": "Show Forecast",
         "show-keyboard-layout": "Keyboard Layout",
         "show-label": "Show Label",
@@ -3076,6 +3077,10 @@
         "calendar-reminders": {
           "description": "Notify before an event starts.",
           "label": "Calendar Reminders"
+        },
+        "calendar-show-events-location": {
+          "description": "Show each event's location below its time in the event list",
+          "label": "Show Event Location"
         },
         "calendar-storage": {
           "button": "Retry",
