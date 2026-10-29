@@ -523,6 +523,10 @@ std::optional<std::string> compositorVersionLine(std::function<void()> onResolve
                 if (parsed.empty() && !result.timedOut) {
                   parsed = firstNonBlankLine(result.err);
                 }
+                // Hyprland appends build provenance: "Hyprland 0.57.0 built from branch ... at commit ...".
+                if (const std::size_t pos = parsed.find(" built from "); pos != std::string::npos) {
+                  parsed.resize(pos);
+                }
                 DeferredCall::callLater([finish, parsed = std::move(parsed)] mutable { finish(std::move(parsed)); });
               },
       },
