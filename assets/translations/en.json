@@ -1406,9 +1406,9 @@
         "active": "Active",
         "idle-for-one": "Idle for 1 second",
         "idle-for-seconds": "Idle for {seconds} seconds",
-        "inhibited": "Inhibited: {inhibitors}",
         "inhibit-reason-caffeine": "Caffeine",
-        "inhibit-reason-external": "external source"
+        "inhibit-reason-external": "external source",
+        "inhibited": "Inhibited: {inhibitors}"
       }
     },
     "navigation": {
