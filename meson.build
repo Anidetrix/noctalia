@@ -1469,11 +1469,13 @@ if build_tests
       depends: secret_collection_probe_integration_exe,
     )
     foreach mode : ['registration', 'discovery']
-      test('tray_' + mode + '_integration',
-        dbus_run_session,
-        args: ['--', tray_registration_integration_exe.full_path(), mode],
-        depends: tray_registration_integration_exe,
-      )
+      foreach scenario : ['default', 'ayatana', 'both']
+        test('tray_' + mode + '_' + scenario + '_integration',
+          dbus_run_session,
+          args: ['--', tray_registration_integration_exe.full_path(), mode, scenario],
+          depends: tray_registration_integration_exe,
+        )
+      endforeach
     endforeach
     test('fingerprint_authenticator_integration',
       dbus_run_session,
