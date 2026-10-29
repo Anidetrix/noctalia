@@ -36,6 +36,7 @@ class Button;
 class AccountsService;
 class CalendarService;
 class ClipboardService;
+class NotificationManager;
 class IpcService;
 class ConfigService;
 class CompositorPlatform;
@@ -129,6 +130,7 @@ public:
   void setCalendarService(CalendarService* service);
   // Source for the bar widget gesture action picker.
   void setIpcService(IpcService* service) { m_ipcService = service; }
+  void setNotificationManager(NotificationManager* manager) { m_notificationManager = manager; }
   void setClipboardService(ClipboardService* service) { m_clipboardService = service; }
   // Backs plugin-store thumbnails; trimmed when the window closes.
   void setAsyncTextureCache(AsyncTextureCache* cache) { m_asyncTextures = cache; }
@@ -275,6 +277,7 @@ private:
   CalendarService* m_calendarService = nullptr;
   std::optional<std::uint64_t> m_calendarCallbackId;
   std::uint64_t m_calendarSyncStatusRevision = 0;
+  NotificationManager* m_notificationManager = nullptr;
   ClipboardService* m_clipboardService = nullptr;
   std::unordered_map<std::string, std::uint32_t> m_templateColors;
   std::string m_templateColorMode;
