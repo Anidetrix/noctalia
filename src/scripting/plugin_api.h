@@ -44,7 +44,8 @@ namespace scripting {
   inline constexpr std::uint32_t kPanelContentHeightPluginApiVersion = 42;
   inline constexpr std::uint32_t kContainerColorRolesPluginApiVersion = 43;
   inline constexpr std::uint32_t kPaletteFormat2PluginApiVersion = 44;
-  inline constexpr std::uint32_t kCurrentPluginApiVersion = kPaletteFormat2PluginApiVersion;
+  inline constexpr std::uint32_t kUmbrielActionPluginApiVersion = 45;
+  inline constexpr std::uint32_t kCurrentPluginApiVersion = kUmbrielActionPluginApiVersion;
 
   static_assert(kOldestSupportedPluginApiVersion <= kCurrentPluginApiVersion);
 
