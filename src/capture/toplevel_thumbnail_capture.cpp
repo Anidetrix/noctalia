@@ -3,15 +3,13 @@
 #include "capture/screencopy_util.h"
 #include "ext-image-capture-source-v1-client-protocol.h"
 #include "ext-image-copy-capture-v1-client-protocol.h"
+#include "render/core/image_resize.h"
 #include "wayland/wayland_connection.h"
 
-#include <algorithm>
 #include <cerrno>
 #include <chrono>
-#include <cmath>
 #include <limits>
 #include <new>
-#include <stb/stb_image_resize2.h>
 #include <sys/mman.h>
 #include <unistd.h>
 #include <utility>
@@ -32,50 +30,18 @@ namespace {
     }
   }
 
-  [[nodiscard]] bool formatHasAlpha(std::uint32_t format) noexcept {
-    return format == WL_SHM_FORMAT_ARGB8888 || format == WL_SHM_FORMAT_ABGR8888;
-  }
-
-  [[nodiscard]] std::uint8_t straightChannel(std::uint32_t value, std::uint32_t alpha) {
-    return alpha == 0 ? 0 : static_cast<std::uint8_t>(std::min(255U, (value * 255U + alpha / 2U) / alpha));
-  }
-
-  [[nodiscard]] bool resizeToRgba(
-      std::span<const std::uint8_t> pixels, int width, int height, std::uint32_t format, ScreencopyImage& out
-  ) {
-    const bool blueFirst = format == WL_SHM_FORMAT_ARGB8888 || format == WL_SHM_FORMAT_XRGB8888;
-    const bool hasAlpha = formatHasAlpha(format);
-
-    // Both layouts are premultiplied so stbir only resizes and swizzles. It skips layout conversion when the size is
-    // unchanged, so straightening alpha is done below rather than relying on stbir.
-    STBIR_RESIZE resize;
-    stbir_resize_init(
-        &resize, pixels.data(), width, height, width * 4, out.rgba.data(), out.width, out.height, out.width * 4,
-        STBIR_4CHANNEL, STBIR_TYPE_UINT8
-    );
-    stbir_set_pixel_layouts(&resize, blueFirst ? STBIR_BGRA_PM : STBIR_RGBA_PM, STBIR_RGBA_PM);
-    if (stbir_resize_extended(&resize) == 0) {
-      return false;
+  // wl_shm names formats by little-endian word order, so ARGB8888 is B, G, R, A in memory.
+  [[nodiscard]] ResizeSourceLayout resizeLayoutFor(std::uint32_t format) noexcept {
+    switch (format) {
+    case WL_SHM_FORMAT_ARGB8888:
+      return ResizeSourceLayout::BgraPremultiplied;
+    case WL_SHM_FORMAT_XRGB8888:
+      return ResizeSourceLayout::Bgrx;
+    case WL_SHM_FORMAT_ABGR8888:
+      return ResizeSourceLayout::RgbaPremultiplied;
+    default:
+      return ResizeSourceLayout::Rgbx;
     }
-
-    const std::size_t pixelCount = static_cast<std::size_t>(out.width) * static_cast<std::size_t>(out.height);
-    std::uint8_t* data = out.rgba.data();
-    for (std::size_t i = 0; i < pixelCount; ++i) {
-      std::uint8_t* pixel = data + i * 4U;
-      if (!hasAlpha) {
-        pixel[3] = 255;
-        continue;
-      }
-      const std::uint32_t alpha = pixel[3];
-      if (alpha == 255) {
-        continue;
-      }
-      for (std::size_t channel = 0; channel < 3; ++channel) {
-        pixel[channel] = straightChannel(pixel[channel], alpha);
-      }
-    }
-
-    return true;
   }
 
   [[nodiscard]] bool transformSwapsAxes(std::int32_t transform) noexcept {
@@ -106,18 +72,14 @@ std::optional<ScreencopyImage> capture::makeToplevelThumbnail(
     return std::nullopt;
   }
 
-  const int orientedWidth = transformSwapsAxes(transform) ? height : width;
-  const int orientedHeight = transformSwapsAxes(transform) ? width : height;
-  const float scale = std::min(
-      {1.0F, static_cast<float>(maxWidth) / static_cast<float>(orientedWidth),
-       static_cast<float>(maxHeight) / static_cast<float>(orientedHeight)}
-  );
+  const bool swapsAxes = transformSwapsAxes(transform);
+  const ImageExtent oriented =
+      fitImageWithin(swapsAxes ? height : width, swapsAxes ? width : height, maxWidth, maxHeight);
   ScreencopyImage image;
-  image.width = std::max(1, static_cast<int>(std::round(static_cast<float>(width) * scale)));
-  image.height = std::max(1, static_cast<int>(std::round(static_cast<float>(height) * scale)));
-  image.rgba.resize(static_cast<std::size_t>(image.width) * static_cast<std::size_t>(image.height) * 4U);
-
-  if (!resizeToRgba(pixels, width, height, format, image)) {
+  image.width = swapsAxes ? oriented.height : oriented.width;
+  image.height = swapsAxes ? oriented.width : oriented.height;
+  image.rgba = resizeToRgba(pixels.data(), width, height, resizeLayoutFor(format), image.width, image.height);
+  if (image.rgba.empty()) {
     return std::nullopt;
   }
   screencopy::orientCaptureForTransform(image, transform);

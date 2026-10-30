@@ -596,6 +596,7 @@ _noctalia_sources = files(
   'src/render/core/heif_library.cpp',
   'src/render/core/image_encoder.cpp',
   'src/render/core/image_orientation.cpp',
+  'src/render/core/image_resize.cpp',
   'src/render/programs/glyph_program.cpp',
   'src/render/programs/image_program.cpp',
   'src/render/programs/lockscreen_transition_program.cpp',
